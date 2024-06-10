@@ -1,0 +1,63 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+otelcol.auth.basic "default_otlp" {
+  username = env("GRAFANA_OTLP_USER")
+  password = env("GRAFANA_OTLP_PASSWORD")
+}
+
+otelcol.receiver.otlp "default" {
+  grpc { endpoint = "0.0.0.0:4317" }
+  http { endpoint = "0.0.0.0:4318" }
+  output {
+    metrics = [otelcol.processor.batch.default.input]
+    logs    = [otelcol.processor.batch.default.input]
+    traces  = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  output {
+    metrics = [otelcol.exporter.otlphttp.default.input]
+    logs    = [otelcol.exporter.otlphttp.default.input]
+    traces  = [otelcol.exporter.otlphttp.default.input]
+  }
+}
+
+otelcol.exporter.otlphttp "default" {
+  client {
+    endpoint           = env("GRAFANA_OTLP_ENDPOINT")
+    http2_ping_timeout = "0s"
+    auth               = otelcol.auth.basic.default_otlp.handler
+  }
+}
+
+prometheus.remote_write "grafanacloud" {
+  endpoint {
+    url = env("GRAFANA_PROM_ENDPOINT")
+    basic_auth {
+      username = env("GRAFANA_PROM_USER")
+      password = env("GRAFANA_PROM_PASS")
+    }
+  }
+}
+
+prometheus.remote_write "local" {
+   endpoint { url = "http://prometheus:9090/api/v1/write" }
+}
+
+prometheus.scrape "default_scraper" {
+  targets = [
+    { __address__ = "node-exporter:9100",        job = "node-exporter"},
+    { __address__ = "postgres-exporter:9187",    job = "postgres-exporter"},
+    { __address__ = "prometheus:9090",           job = "prometheus"},
+    { __address__ = "host.docker.internal:8083", job = "grex-t0"},
+  ]
+  forward_to = [
+    prometheus.remote_write.grafanacloud.receiver, 
+    prometheus.remote_write.local.receiver,
+  ]
+  scrape_interval = "10s"
+}
