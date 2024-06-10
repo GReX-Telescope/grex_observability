@@ -10,7 +10,7 @@ services:
       - "--enable-feature=remote-write-receiver"
     ports:
       - 9090:9090
-    restart: unless-stopped
+    restart: always
     volumes:
       - prom_data:/prometheus
 
@@ -18,7 +18,7 @@ services:
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
-    restart: unless-stopped
+    restart: always
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -39,7 +39,7 @@ services:
       - 12345:12345 # Alloy WebUI
       - 4317:4317 # OTLP gRPC receiver
       - 4318:4318 # OTLP http receiver
-    restart: unless-stopped
+    restart: always
     volumes:
       - ./config.alloy:/etc/alloy/config.alloy
     extra_hosts:
