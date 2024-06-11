@@ -59,4 +59,5 @@ prometheus.scrape "default_scraper" {
     prometheus.remote_write.local.receiver,
   ]
   scrape_interval = "30s"
+  scrape_timeout = "1m"
 }
