@@ -58,5 +58,5 @@ prometheus.scrape "default_scraper" {
     prometheus.remote_write.grafanacloud.receiver, 
     prometheus.remote_write.local.receiver,
   ]
-  scrape_interval = "10s"
+  scrape_interval = "30s"
 }
